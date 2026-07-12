@@ -118,7 +118,15 @@ Running the automated script (`scripts/run_benchmarks.ps1` or `scripts/run_bench
 | :--- | :--- | :--- | :--- | :--- |
 | **Sequential** | 2-way | 75.00% | 75.00% | 75.00% |
 | **Sequential** | 4-way | 75.00% | 75.00% | 75.00% |
-| **Loop Pattern** | 2-way | 99.40% | 99.40% | 99.40% |
-| **Loop Pattern** | 4-way | 99.40% | 99.40% | 99.40% |
+| **Loop Pattern** | 2-way | 49.80% | 25.00% | 25.00% |
+| **Loop Pattern** | 4-way | 49.80% | 37.50% | 37.50% |
 | **Random** | 2-way | 0.40% | 0.40% | 0.40% |
 | **Random** | 4-way | 0.40% | 0.40% | 0.20% |
+
+### Hot-Cold Interleaved Trace Design Insight
+The `loop_pattern.txt` trace is designed as a "hot-cold" interleaved access pattern mapping entirely to Set 0 (`0x0`, `0x200`, `0x0`, `0x400`, `0x0`, `0x600`, ...). Block `0x0` acts as a hot line accessed every second transaction, while other blocks act as cold lines that thrash the set.
+
+- **LRU (Least Recently Used)**: Recency-aware. Because `0x0` is accessed frequently, LRU maintains it in the set, yielding a **49.80%** hit rate (nearly 100% hits on the hot line).
+- **FIFO (First-In, First-Out)**: Agnostic to hits. FIFO does not update insertion times on hits, so the hot line `0x0` is evicted when its original insertion order becomes the oldest, yielding a significantly lower hit rate (**25.00%** under 2-way, **37.50%** under 4-way).
+
+This trace demonstrates the fundamental performance advantage of recency-aware policies (LRU) over simple time-in-cache policies (FIFO) on skewed access distributions.
