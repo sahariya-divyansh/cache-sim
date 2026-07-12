@@ -15,12 +15,12 @@ In modern architectures, the cache is divided into sets, each containing one or 
 ```
 
 1. **Block Offset**: Determines the specific byte location within a cache block.
-   $$\text{offset\_bits} = \log_2(\text{block\_size})$$
+   $$\text{offset\\_bits} = \log_2(\text{block\\_size})$$
 2. **Set Index**: Selects the target set within the cache structure.
-   $$\text{num\_sets} = \frac{\text{cache\_size}}{\text{block\_size} \times \text{associativity}}$$
-   $$\text{index\_bits} = \log_2(\text{num\_sets})$$
+   $$\text{num\\_sets} = \frac{\text{cache\\_size}}{\text{block\\_size} \times \text{associativity}}$$
+   $$\text{index\\_bits} = \log_2(\text{num\\_sets})$$
 3. **Tag**: Uniquely identifies the memory block stored in a cache line.
-   $$\text{tag\_bits} = \text{word\_size} - \text{index\_bits} - \text{offset\_bits}$$
+   $$\text{tag\\_bits} = \text{word\\_size} - \text{index\\_bits} - \text{offset\\_bits}$$
 
 This simulator uses high-speed bit masking and bit-shifts in the critical access loop to resolve set locations and tags with zero pointer dereferences or branching overhead.
 
