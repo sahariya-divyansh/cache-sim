@@ -240,17 +240,14 @@ int cache_access(Cache *c, unsigned long address) {
         return 0;
     }
 
-    unsigned long tag = 0;
-    unsigned long index = 0;
-    unsigned long offset = 0;
-
-    // Decompose the address into Tag, Set Index, and Offset
-    extract_address_fields(c, address, &tag, &index, &offset);
-
-    CacheSet *set = &c->sets[index];
-
     // Increment global access counter on every read/write transaction
     c->access_counter++;
+
+    // High performance bitwise calculation in hot-path (0 function call, 0 pointer/branch overhead)
+    unsigned long index = (address >> c->offset_bits) & ((1UL << c->index_bits) - 1);
+    unsigned long tag = address >> (c->offset_bits + c->index_bits);
+
+    CacheSet *set = &c->sets[index];
 
     // 1. Search for a Cache Hit
     for (int i = 0; i < c->associativity; i++) {
