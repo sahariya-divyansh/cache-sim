@@ -19,55 +19,69 @@ typedef enum {
  */
 typedef struct CacheLine {
     bool valid;
-    uint64_t tag;
-    uint64_t last_accessed; // For LRU tracking
-    uint64_t load_time;     // For FIFO tracking
+    unsigned long tag;
+    unsigned long last_used;       // Counter/timestamp for LRU tracking
+    unsigned long insertion_time;  // Counter/timestamp for FIFO tracking
 } CacheLine;
 
 /**
- * @brief Represents a single cache set, which contains multiple lines.
+ * @brief Represents a single cache set containing multiple cache lines.
  */
 typedef struct CacheSet {
     CacheLine *lines;
 } CacheSet;
 
 /**
- * @brief Represents the top-level cache simulator system structure.
+ * @brief Represents the top-level Cache configuration and hierarchy state.
  */
 typedef struct Cache {
     CacheSet *sets;
-    size_t num_sets;
-    size_t block_size;
-    size_t associativity;
+    int cache_size;
+    int block_size;
+    int associativity;
+    int num_sets;
+    int offset_bits;
+    int index_bits;
+    int tag_bits;
     ReplacementPolicy policy;
 } Cache;
 
 /**
- * @brief Creates and initializes a new cache structure.
+ * @brief Initializes the cache simulator data structures.
  * 
- * @param cache_size Total size of the cache in bytes.
- * @param block_size Block size in bytes.
- * @param associativity Associativity level (1 for direct-mapped, N for N-way, etc.).
- * @param policy Cache replacement policy.
- * @return Cache* Pointer to the allocated Cache structure, or NULL on failure.
+ * @param cache_size Total cache size in bytes (must be power of 2).
+ * @param block_size Cache block size in bytes (must be power of 2).
+ * @param associativity Level of associativity (1 for direct, power of 2, etc.).
+ * @return Cache* Pointer to the allocated Cache structure, or NULL on error.
  */
-Cache* cache_create(size_t cache_size, size_t block_size, size_t associativity, ReplacementPolicy policy);
+Cache* cache_init(int cache_size, int block_size, int associativity);
 
 /**
- * @brief Safely frees all memory allocated for the cache simulator structure.
+ * @brief Safely deallocates all allocated memory for the cache.
  * 
- * @param cache Pointer to the Cache structure to be freed.
+ * @param c Pointer to the Cache structure to destroy.
  */
-void cache_destroy(Cache *cache);
+void cache_destroy(Cache *c);
+
+/**
+ * @brief Extracts the tag, set index, and offset fields from a memory address.
+ * 
+ * @param c Pointer to the Cache simulator parameters.
+ * @param address The incoming memory access address.
+ * @param tag Output pointer for the extracted tag bits.
+ * @param index Output pointer for the extracted index bits.
+ * @param offset Output pointer for the extracted block offset bits.
+ */
+void extract_address_fields(Cache *c, unsigned long address, unsigned long *tag, unsigned long *index, unsigned long *offset);
 
 /**
  * @brief Simulates a memory access to the cache.
  * 
- * @param cache Pointer to the Cache structure.
+ * @param c Pointer to the Cache structure.
  * @param address Memory address being accessed.
  * @param mode Access mode ('l' for load/read, 's' for store/write).
  * @return true if access resulted in a hit, false if it was a miss.
  */
-bool cache_access(Cache *cache, uint64_t address, char mode);
+bool cache_access(Cache *c, uint64_t address, char mode);
 
 #endif // CACHE_H
