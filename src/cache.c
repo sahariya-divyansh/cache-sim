@@ -89,7 +89,8 @@ static int find_victim_fifo(Cache *c, int set_index) {
  * @return The index of the victim line.
  */
 static int find_victim_random(Cache *c) {
-    return (int)(lcg_rand(&c->rng_state) % (unsigned int)c->associativity);
+    // Shift right by 16 to use the higher order bits, avoiding the LSB parity alternation gotcha
+    return (int)((lcg_rand(&c->rng_state) >> 16) % (unsigned int)c->associativity);
 }
 
 Cache* cache_init(int cache_size, int block_size, int associativity) {

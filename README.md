@@ -118,8 +118,8 @@ Running the automated script (`scripts/run_benchmarks.ps1` or `scripts/run_bench
 | :--- | :--- | :--- | :--- | :--- |
 | **Sequential** | 2-way | 75.00% | 75.00% | 75.00% |
 | **Sequential** | 4-way | 75.00% | 75.00% | 75.00% |
-| **Loop Pattern** | 2-way | 49.80% | 25.00% | 25.00% |
-| **Loop Pattern** | 4-way | 49.80% | 37.50% | 37.50% |
+| **Loop Pattern** | 2-way | 49.80% | 25.00% | 24.60% |
+| **Loop Pattern** | 4-way | 49.80% | 37.50% | 44.44% |
 | **Random** | 2-way | 0.40% | 0.40% | 0.40% |
 | **Random** | 4-way | 0.40% | 0.40% | 0.20% |
 
