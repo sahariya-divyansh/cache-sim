@@ -10,13 +10,14 @@
  * @param prog_name Name of the simulator executable.
  */
 static void print_usage(const char *prog_name) {
-    fprintf(stderr, "Usage: %s -s <cache_size> -b <block_size> -a <associativity> -p <policy> -t <tracefile>\n", prog_name);
+    fprintf(stderr, "Usage: %s -s <cache_size> -b <block_size> -a <associativity> -p <policy> -t <tracefile> [-r <seed>]\n", prog_name);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -s <cache_size>    Total cache size in bytes (must be a power of 2)\n");
     fprintf(stderr, "  -b <block_size>    Block size in bytes (must be a power of 2)\n");
     fprintf(stderr, "  -a <associativity> Associativity (1 for direct-mapped, power of 2, or total size for fully associative)\n");
     fprintf(stderr, "  -p <policy>        Replacement policy (lru, fifo, random)\n");
     fprintf(stderr, "  -t <tracefile>     Path to the memory access trace file\n");
+    fprintf(stderr, "  -r <seed>          Random seed state for RANDOM replacement policy (default: 42)\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -26,9 +27,10 @@ int main(int argc, char *argv[]) {
     long associativity = -1;
     char *policy_str = NULL;
     char *tracefile = NULL;
+    long seed = 42;
 
     // Parsing options using getopt
-    while ((opt = getopt(argc, argv, "s:b:a:p:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "s:b:a:p:t:r:")) != -1) {
         switch (opt) {
             case 's':
                 cache_size = atol(optarg);
@@ -44,6 +46,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 't':
                 tracefile = optarg;
+                break;
+            case 'r':
+                seed = atol(optarg);
                 break;
             default:
                 print_usage(argv[0]);
@@ -78,6 +83,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     cache->policy = policy;
+    cache->rng_state = (unsigned int)seed;
 
     printf("==========================================\n");
     printf(" Cache Simulator Configuration\n");
@@ -86,6 +92,9 @@ int main(int argc, char *argv[]) {
     printf("  Block Size:    %d bytes\n", cache->block_size);
     printf("  Associativity: %d-way\n", cache->associativity);
     printf("  Policy:        %s\n", policy_str);
+    if (policy == POLICY_RANDOM) {
+        printf("  Random Seed:   %ld\n", seed);
+    }
     printf("  Trace File:    %s\n", tracefile);
     printf("------------------------------------------\n");
     printf(" Computed Cache Parameters:\n");
@@ -103,6 +112,45 @@ int main(int argc, char *argv[]) {
     printf("  Tag:    0x%lX\n", tag);
     printf("  Index:  0x%lX\n", index);
     printf("  Offset: 0x%lX\n", offset);
+    printf("==========================================\n");
+
+    // Open and parse trace file
+    FILE *tf = fopen(tracefile, "r");
+    if (!tf) {
+        fprintf(stderr, "Error: Could not open trace file '%s'.\n", tracefile);
+        cache_destroy(cache);
+        return EXIT_FAILURE;
+    }
+
+    char access_type;
+    unsigned long addr;
+    long long hits = 0;
+    long long misses = 0;
+
+    // Scan line by line (skip comments starting with #)
+    char line_buf[256];
+    while (fgets(line_buf, sizeof(line_buf), tf)) {
+        if (line_buf[0] == '#' || line_buf[0] == '\n' || line_buf[0] == '\r') {
+            continue;
+        }
+        if (sscanf(line_buf, " %c %lx", &access_type, &addr) == 2) {
+            int outcome = cache_access(cache, addr);
+            if (outcome == 1) {
+                hits++;
+            } else {
+                misses++;
+            }
+        }
+    }
+    fclose(tf);
+
+    long long total_accesses = hits + misses;
+    double hit_rate = total_accesses > 0 ? (double)hits / total_accesses * 100.0 : 0.0;
+    printf("Simulation Results:\n");
+    printf("  Total Accesses: %lld\n", total_accesses);
+    printf("  Hits:           %lld\n", hits);
+    printf("  Misses:         %lld\n", misses);
+    printf("  Hit Rate:       %.2f%%\n", hit_rate);
     printf("==========================================\n");
 
     // Clean up memory before exiting

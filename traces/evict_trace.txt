@@ -1,0 +1,7 @@
+# Test trace for LRU vs FIFO comparison
+# 1 set of size 2 (cache_size=128, block=64, assoc=2)
+l 0x0
+l 0x40
+l 0x0
+l 0x80
+l 0x0

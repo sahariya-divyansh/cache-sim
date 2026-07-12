@@ -44,6 +44,8 @@ typedef struct Cache {
     int index_bits;
     int tag_bits;
     ReplacementPolicy policy;
+    unsigned long access_counter;  // Global access counter for LRU/FIFO ordering
+    unsigned int rng_state;        // Current state for thread-safe pseudo-random generator
 } Cache;
 
 /**
@@ -79,9 +81,8 @@ void extract_address_fields(Cache *c, unsigned long address, unsigned long *tag,
  * 
  * @param c Pointer to the Cache structure.
  * @param address Memory address being accessed.
- * @param mode Access mode ('l' for load/read, 's' for store/write).
- * @return true if access resulted in a hit, false if it was a miss.
+ * @return 1 if access resulted in a hit, 0 if it was a miss.
  */
-bool cache_access(Cache *c, uint64_t address, char mode);
+int cache_access(Cache *c, unsigned long address);
 
 #endif // CACHE_H
