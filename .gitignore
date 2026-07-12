@@ -1,0 +1,10 @@
+# Object files
+*.o
+
+# Executables
+*.exe
+*.out
+
+# Build directories
+bin/
+build/
