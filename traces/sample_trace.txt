@@ -1,0 +1,9 @@
+# Sample trace file for cache-sim
+# Format: <operation> <address>
+# operations: l (load), s (store)
+l 0x7fff5fbff880
+s 0x7fff5fbff888
+l 0x7fff5fbff880
+l 0x10000000
+s 0x10000008
+l 0x10000000
