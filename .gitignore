@@ -9,3 +9,6 @@
 bin/
 build/
 obj/
+
+# IDE configurations
+.vscode/
